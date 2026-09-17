@@ -31,8 +31,9 @@ This project is designed for students participating in mathematical modeling com
 huawei-cup-modeling-skill/
 ├── README.md
 ├── LICENSE
+├── CONTRIBUTING.md
 ├── SKILL.md
-├── scripts/        # Workflow and validation scripts
-├── references/     # Modeling and research references
-├── templates/      # Review and traceability templates
-└── rules/          # Modeling and writing rules
+├── scripts/
+├── references/
+├── templates/
+└── rules/
