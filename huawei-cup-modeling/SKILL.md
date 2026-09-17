@@ -1,5 +1,5 @@
 ---
-name: huawei-cup-modeling
+name: SKILL.md
 description: "华为杯数学建模专家系统。用于完整赛题求解、建模路线选择、求解验证与高水平 LaTeX 论文交付：先从题目对象/关系/约束/目标建立贴题模型，再选择适合模型的方法，主动证伪并用可追溯证据验证结果，最后形成清楚有说服力的论文。格式只在 WRITE/DELIVER 自动核对当届官方明确要求：mandatory 才阻断，advisory 只提醒，未说明项不加限制。"
 ---
 
