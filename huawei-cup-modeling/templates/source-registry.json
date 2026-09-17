@@ -1,0 +1,7 @@
+{
+  "paper": "qa/final-render/main.pdf",
+  "paper_sha256": "REPLACE_WITH_ACTUAL_HASH",
+  "sources": [],
+  "claims": [],
+  "instructions": "Start empty. Register only borrowed external models/formulas/facts actually used and any critical self-derived claim that needs an explicit derivation binding. If none exist, empty sources/claims are valid after binding this registry to the current compiled PDF."
+}
