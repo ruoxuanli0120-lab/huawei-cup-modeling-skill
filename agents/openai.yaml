@@ -1,0 +1,6 @@
+interface:
+  display_name: "华为杯数学建模专家系统"
+  short_description: "贴题建模→合适方法→主动证伪→可信验证→清楚的 LaTeX 论文与 Overleaf 交付"
+  default_prompt: "Use $huawei-cup-modeling to understand the problem first, build a model that matches the objects, relationships, constraints and goals, choose the simplest reliable method that fits that model, falsify and validate the result with real evidence, then write one clear LaTeX manuscript and package the same source for Overleaf."
+policy:
+  allow_implicit_invocation: false

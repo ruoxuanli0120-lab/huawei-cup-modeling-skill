@@ -1,0 +1,1322 @@
+{
+  "_note": "Modeling Behavioral Evals. Each case encodes a scenario that tempts a specific bad modeling behavior, the expected expert behavior, the forbidden behavior, and a weighted rubric. These evaluate MODELING REASONING, not code gates. auto_scorable=true cases carry coarse keyword/regex auto_checks (kinds: present, absent, count_min, requires) that a script can run against a written response; auto_scorable=false cases must be scored by a human/model against the rubric. An auto_pass is a coarse proxy, NOT a certificate of excellent modeling - the rubric still governs. Run with scripts/modeling_behavior_evals.py.",
+  "schema_version": 1,
+  "cases": [
+    {
+      "id": "insight-before-algorithm",
+      "stage": "UNDERSTAND",
+      "priority_tested": "1 问题理解与数学抽象",
+      "scenario": "赛题刚发布，队友看到‘根据历史数据预测未来销量’就说‘直接上 XGBoost 调参’。你作为主建模手的第一反应是什么？请写出你打开赛题后前 30 分钟的思考与动作。",
+      "expected_behaviors": [
+        "先剥背景，说出这道题的数学本质（条件期望估计？时序外推？）与变量/信息结构",
+        "先判断信息可见时刻与泄漏风险，再谈模型",
+        "至少给出 2 个不同的问题表示备选，再进入路线构思",
+        "把算法选择推迟到表示与结构确定之后"
+      ],
+      "forbidden_behaviors": [
+        "algorithm-first：在写出结构/本质前就锁定 XGBoost",
+        "把‘调参’当成建模路线",
+        "跳过 Problem Insight Map 直接写代码"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否先确定数学本质与结构，再谈算法",
+          "weight": 0.4,
+          "excellent": "明确写出本质/结构/信息可见性，算法留到最后",
+          "poor": "开篇即锁定某算法/库"
+        },
+        {
+          "criterion": "是否提出多个表示备选",
+          "weight": 0.3,
+          "excellent": "≥2 个结构不同的表示并比较",
+          "poor": "只有一种表示或直接套模板"
+        },
+        {
+          "criterion": "是否识别泄漏/划分风险",
+          "weight": 0.3,
+          "excellent": "指出按时间/实体划分与可见时刻",
+          "poor": "不提验证划分"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "XGBoost",
+            "LightGBM",
+            "随机森林",
+            "遗传算法",
+            "神经网络",
+            "深度学习",
+            "random forest",
+            "neural"
+          ],
+          "then": [
+            "结构",
+            "数学本质",
+            "本质",
+            "表示",
+            "信息结构",
+            "structure"
+          ]
+        },
+        {
+          "kind": "present",
+          "patterns": [
+            "数学本质|本质|结构|表示"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "representation-over-algorithm",
+      "stage": "IDEATE",
+      "priority_tested": "2 模型的合适性 / 5 题目特异性创新",
+      "scenario": "一道资源调度题，原始变量下是大规模整数规划，直接求解超时。队友建议换更强的求解器或上群智能算法。请给出你的思路。",
+      "expected_behaviors": [
+        "优先寻找更好的表示（对偶/松弛/分解/图-网络流/贪心构造+局部搜索）而非更高级算法",
+        "说明新表示为何贴合题目结构、能把难问题变简单",
+        "用最朴素基线先跑通并观测其具体失效，再决定是否需要复杂度"
+      ],
+      "forbidden_behaviors": [
+        "把‘换更强求解器/群智能’当作首选而不改表示",
+        "不观测基线失效就加复杂度"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否优先考虑表示变换",
+          "weight": 0.5,
+          "excellent": "提出对偶/松弛/分解/图转化等并表示这比换算法更根本",
+          "poor": "只谈换算法/求解器"
+        },
+        {
+          "criterion": "复杂度是否有正当性",
+          "weight": 0.3,
+          "excellent": "指向已观测到的基线失效",
+          "poor": "以‘更强/SOTA’为由"
+        },
+        {
+          "criterion": "是否回扣题目结构",
+          "weight": 0.2,
+          "excellent": "解释结构如何决定表示",
+          "poor": "泛泛而谈"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "ideation-breadth",
+      "stage": "IDEATE",
+      "priority_tested": "1 问题理解与数学抽象 / 2 模型的合适性",
+      "scenario": "请为一道‘评估多座城市宜居度并排序’的题，列出你会带入锦标赛的候选建模路线（要求结构不同）。",
+      "expected_behaviors": [
+        "给出 4–6 条结构不同的路线（如：等权基线、客观赋权(熵权/CRITIC)、主观赋权(AHP)、TOPSIS/理想点、灰色关联、统计因子分析/主成分、回归到客观结果变量）",
+        "每条附核心表示、假设、与基线差异、区分实验",
+        "明确 RF/XGBoost/LightGBM 这类同族只算一条路线"
+      ],
+      "forbidden_behaviors": [
+        "把换库/换超参/换距离度量当成不同路线",
+        "只给 1–2 条或给出十几条算法大全",
+        "把同族树模型拆成多条凑数"
+      ],
+      "rubric": [
+        {
+          "criterion": "路线数量与结构差异度",
+          "weight": 0.4,
+          "excellent": "4–6 条且表示/抽象不同",
+          "poor": "<3 条或全是同类换参"
+        },
+        {
+          "criterion": "每条描述完整度(13 点要点)",
+          "weight": 0.3,
+          "excellent": "含表示/假设/区分实验",
+          "poor": "只有算法名"
+        },
+        {
+          "criterion": "是否识破同族伪装",
+          "weight": 0.3,
+          "excellent": "明确同族算一条",
+          "poor": "把树模型家族拆成多条"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "count_min",
+          "min": 4,
+          "patterns": [
+            "等权",
+            "熵权",
+            "CRITIC",
+            "AHP",
+            "层次分析",
+            "TOPSIS",
+            "理想点",
+            "灰色关联",
+            "主成分",
+            "因子分析",
+            "回归",
+            "模糊",
+            "神经网络",
+            "聚类",
+            "DEA",
+            "数据包络"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tournament-converge",
+      "stage": "SELECT",
+      "priority_tested": "2 模型的合适性",
+      "scenario": "你已构思出 5 条路线，其中 2 条你已经各写了一半代码。锦标赛后你如何决定带哪些进入正式求解？",
+      "expected_behaviors": [
+        "用加权评分卡(结构契合/可验证性/可行性/成本风险/上限/可解释)打分并裁决 KEEP/KILL/PILOT",
+        "收敛到 1 主线 + ≤1 挑战者",
+        "对已写代码但落后的路线，基于前瞻证据 KILL，不因已投入而保留"
+      ],
+      "forbidden_behaviors": [
+        "把 5 条全部带入 BUILD（等于没做选择）",
+        "沉没成本保留：因为已经写了代码就继续",
+        "只甩一个分数不给证据解释"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否收敛到 1+≤1",
+          "weight": 0.4,
+          "excellent": "明确主线+至多一个挑战者",
+          "poor": "保留多条或全部"
+        },
+        {
+          "criterion": "淘汰是否带证据、拒绝沉没成本",
+          "weight": 0.4,
+          "excellent": "对已写代码的落后路线仍 KILL 并说明被什么支配",
+          "poor": "因已投入而保留"
+        },
+        {
+          "criterion": "评分是否服务决策而非替代决策",
+          "weight": 0.2,
+          "excellent": "分数+证据解释",
+          "poor": "只有分数"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "falsification-first",
+      "stage": "FALSIFY",
+      "priority_tested": "4 模型有效性与科学验证",
+      "scenario": "主线模型在训练集上表现很好。进入 SKEPTIC pass，你会做什么？",
+      "expected_behaviors": [
+        "设计低成本、高区分度的杀手实验，主动尝试推翻主线关键假设",
+        "针对本题题型攻击最致命失效模式（泄漏/约束遗漏/量纲/不收敛/排名反转/反例）",
+        "若实验证伪关键假设则换路线，不追加成功例子粉饰"
+      ],
+      "forbidden_behaviors": [
+        "只堆成功案例证明主线好",
+        "用挑选模型时用过的同一数据证明泛化",
+        "证伪后仍沉没成本保留"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否真的尝试证伪(可推翻主线的实验)",
+          "weight": 0.5,
+          "excellent": "设计能一票否决的杀手实验",
+          "poor": "只做确认性实验"
+        },
+        {
+          "criterion": "攻击是否针对题型关键失效",
+          "weight": 0.3,
+          "excellent": "点名泄漏/划分/反例等",
+          "poor": "泛泛稳健性"
+        },
+        {
+          "criterion": "证伪后的处置",
+          "weight": 0.2,
+          "excellent": "换路线或限定结论",
+          "poor": "忽略不利证据"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "complexity-justification",
+      "stage": "BUILD",
+      "priority_tested": "3 求解方法的合适性 / 5 题目特异性创新",
+      "scenario": "简单线性基线已跑通。队友想加一个深度神经网络/集成来‘提升档次’。你如何决定是否加复杂度？",
+      "expected_behaviors": [
+        "要求先观测基线的具体失效模式（在哪类样本/工况上失败）",
+        "只有当复杂度针对性修复某个已观测失效、且区分实验证明收益>成本时才加",
+        "默认：利用结构的简单模型优于与结构无关的复杂算法"
+      ],
+      "forbidden_behaviors": [
+        "以‘深度学习是 SOTA/更强/更高级/集成更稳/参数更多更准’为唯一理由加复杂度",
+        "没观测到失效就加模块"
+      ],
+      "rubric": [
+        {
+          "criterion": "复杂度是否绑定已观测基线失效",
+          "weight": 0.5,
+          "excellent": "明确指出修哪个失效并给区分实验",
+          "poor": "无失效证据直接上复杂模型"
+        },
+        {
+          "criterion": "是否拒绝‘SOTA/更高级’式理由",
+          "weight": 0.3,
+          "excellent": "明确这类理由不成立",
+          "poor": "以此为由"
+        },
+        {
+          "criterion": "是否先建简单基线",
+          "weight": 0.2,
+          "excellent": "基线先行",
+          "poor": "跳过基线"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "深度学习",
+            "神经网络",
+            "集成",
+            "更复杂",
+            "neural",
+            "ensemble",
+            "deep learning"
+          ],
+          "then": [
+            "基线",
+            "失效",
+            "失败",
+            "baseline",
+            "观测到",
+            "残差"
+          ]
+        },
+        {
+          "kind": "absent",
+          "patterns": [
+            "SOTA所以",
+            "更高级所以",
+            "看起来更强",
+            "提升档次",
+            "state-of-the-art所以"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "no-leakage-validation",
+      "stage": "VALIDATE",
+      "priority_tested": "4 模型有效性与科学验证",
+      "scenario": "一道临床/时间序列预测题，你要评估模型泛化。请描述你的验证划分与预处理流程。",
+      "expected_behaviors": [
+        "按时间或实体(患者/站点/事件)划分，而非随机打乱",
+        "插补/缩放/特征筛选/调参都在训练折内完成",
+        "留出期/跨区评估，区分参数估计、选模与最终测试"
+      ],
+      "forbidden_behaviors": [
+        "随机分层划分导致未来信息或同实体泄漏",
+        "在全量数据上先做插补/特征筛选再划分",
+        "用拟合优度冒充泛化"
+      ],
+      "rubric": [
+        {
+          "criterion": "划分是否防泄漏",
+          "weight": 0.5,
+          "excellent": "时间/实体隔离",
+          "poor": "随机打乱"
+        },
+        {
+          "criterion": "预处理是否在折内",
+          "weight": 0.3,
+          "excellent": "训练折内完成",
+          "poor": "全量预处理后再分"
+        },
+        {
+          "criterion": "是否区分选模与最终测试",
+          "weight": 0.2,
+          "excellent": "三者分离",
+          "poor": "混用"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "预测",
+            "时间序列",
+            "泛化",
+            "临床",
+            "患者",
+            "forecast",
+            "generaliz"
+          ],
+          "then": [
+            "划分",
+            "留出",
+            "时间隔离",
+            "按时间",
+            "按实体",
+            "折",
+            "split",
+            "fold",
+            "holdout"
+          ]
+        },
+        {
+          "kind": "absent",
+          "patterns": [
+            "随机打乱.*验证",
+            "全量.*插补.*再划分"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "numeric-provenance-truth",
+      "stage": "VALIDATE",
+      "priority_tested": "4 模型有效性与科学验证",
+      "scenario": "论文摘要要写一个关键指标数值。请描述这个数值从产生到写进摘要的完整链路。",
+      "expected_behaviors": [
+        "数值来自真实运行输出，记录输入/代码/配置/精度/种子",
+        "raw_value→display_value(按 rounding_rule)→manuscript_location 绑定，进 numeric-provenance 台账",
+        "Tier A 关键结论有两个不同文件的独立复核；脚本通过≠科学独立≠正文数字全覆盖"
+      ],
+      "forbidden_behaviors": [
+        "摘要先编数字再找依据",
+        "把极小误差写成 0，或伪造哈希",
+        "用同一预处理/指标实现充当‘独立’复核"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否有真实运行→台账→正文的可追溯链",
+          "weight": 0.5,
+          "excellent": "完整 raw/display/location/run 绑定",
+          "poor": "数字无来源"
+        },
+        {
+          "criterion": "独立复核是否真独立",
+          "weight": 0.3,
+          "excellent": "不同实现/解析边界核验共同部分",
+          "poor": "复用同一实现"
+        },
+        {
+          "criterion": "是否理解脚本通过的边界",
+          "weight": 0.2,
+          "excellent": "明确脚本不证明科学独立/覆盖",
+          "poor": "把 PASS 当自证"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "no-overclaim",
+      "stage": "INTERPRET",
+      "priority_tested": "4 模型有效性与科学验证 / 6 论文清晰表达",
+      "scenario": "你的启发式算法在所有测试实例上都取得了目前最好的目标值。如何在论文中表述这一结果？",
+      "expected_behaviors": [
+        "明确这是启发式/限制族内最好，不写‘全局最优’除非有下界证明",
+        "区分关联与因果、拟合与泛化、有限实例与定理",
+        "写清支持什么、不支持什么、适用范围"
+      ],
+      "forbidden_behaviors": [
+        "无证明却宣称全局最优",
+        "把变量重要性/相关说成因果",
+        "把有限实验说成定理、把训练拟合说成泛化"
+      ],
+      "rubric": [
+        {
+          "criterion": "最优性主张是否有证明支撑",
+          "weight": 0.4,
+          "excellent": "无下界则称启发式",
+          "poor": "直接写全局最优"
+        },
+        {
+          "criterion": "因果/泛化/定理是否被滥用",
+          "weight": 0.4,
+          "excellent": "明确边界",
+          "poor": "混淆"
+        },
+        {
+          "criterion": "适用范围是否写清",
+          "weight": 0.2,
+          "excellent": "给适用与不适用条件",
+          "poor": "无限推广"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "全局最优",
+            "global optim",
+            "最优解"
+          ],
+          "then": [
+            "证明",
+            "下界",
+            "严格",
+            "lower bound",
+            "proof",
+            "attain"
+          ]
+        },
+        {
+          "kind": "requires",
+          "if": [
+            "因果",
+            "causal",
+            "导致"
+          ],
+          "then": [
+            "识别",
+            "混杂",
+            "干预",
+            "反事实",
+            "identification",
+            "confound",
+            "安慰剂"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "unified-storyline",
+      "stage": "UNDERSTAND",
+      "priority_tested": "1 问题理解与数学抽象 / 6 论文清晰表达",
+      "scenario": "一道有 4 个小问的综合题。请描述你如何组织各问的模型，使全篇有统一逻辑。",
+      "expected_behaviors": [
+        "先画 Question Dependency Graph：每问输入来源/输出去向/共享主线对象",
+        "全篇回扣同一 Core Insight，用一条主线串起",
+        "上游输出作下游输入时登记接口并做误差传播；约束不无判断地跨问传递"
+      ],
+      "forbidden_behaviors": [
+        "Q1 用 AHP、Q2 用 XGBoost、Q3 用遗传算法的无逻辑拼盘",
+        "把上一问约束未经判断带入下一问",
+        "各问独立成章、无共同故事线"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否建立小问依赖图与主线",
+          "weight": 0.5,
+          "excellent": "依赖清晰且回扣同一洞察",
+          "poor": "各问拼盘"
+        },
+        {
+          "criterion": "接口与误差传播是否处理",
+          "weight": 0.3,
+          "excellent": "登记单位/索引/时间口径并传播检查",
+          "poor": "直接串联"
+        },
+        {
+          "criterion": "约束跨问传递是否经过判断",
+          "weight": 0.2,
+          "excellent": "逐问判断松紧",
+          "poor": "默认继承"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "theoretical-not-forced-code",
+      "stage": "VALIDATE",
+      "priority_tested": "4 模型有效性与科学验证",
+      "scenario": "一道小问要求给出一个构造并证明其最优性（纯理论，无需数值实验）。你如何组织证据与验证？",
+      "expected_behaviors": [
+        "在 run-state 将该问配置为 claim_mode=theoretical，并用 mode_note 说明主要交付是证明/构造",
+        "用 theoretical-evidence：每个命题按哈希绑定证明文件，标 kind 与 manuscript_location",
+        "承认数学正确性仍需人/模型审查；有限实验不能冒充定理"
+      ],
+      "forbidden_behaviors": [
+        "为凑必须有代码/运行而伪造数值实验或台账",
+        "把 theoretical 当成跳过验证的开关",
+        "理论问仍被强迫注册 numeric objective/incumbent/Referee A/B"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否用绑定证明而非伪造数值",
+          "weight": 0.5,
+          "excellent": "theoretical-evidence 哈希绑定",
+          "poor": "硬造运行/台账"
+        },
+        {
+          "criterion": "N/A 是否被严格条件化",
+          "weight": 0.3,
+          "excellent": "theoretical 模式仍要求绑定证明与 theory_check",
+          "poor": "把理论模式当绕过验证开关"
+        },
+        {
+          "criterion": "是否保留人工数学审查",
+          "weight": 0.2,
+          "excellent": "明确脚本不证明正确性",
+          "poor": "把绑定当成证明正确"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "证明",
+            "构造",
+            "定理",
+            "最优性",
+            "proof",
+            "theorem"
+          ],
+          "then": [
+            "theoretical-evidence",
+            "理论证据",
+            "绑定证明",
+            "proof_file",
+            "哈希绑定"
+          ]
+        },
+        {
+          "kind": "absent",
+          "patterns": [
+            "跳过验证",
+            "skip validation",
+            "N/A.*绕过",
+            "不需要任何证据"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "excellent-paper-timing",
+      "stage": "IDEATE",
+      "priority_tested": "1 问题理解与数学抽象 / 5 题目特异性创新",
+      "scenario": "用户提供了 20 篇历年优秀论文。你刚拿到赛题，会怎样使用这些论文？",
+      "expected_behaviors": [
+        "Phase A 先独立分析本题(不打开论文)，Phase B 自建洞察与路线，Phase C 才读论文当挑战者/灵感源",
+        "只迁移可迁移机制(拆题/选择证据/验证/边界/摘要写法)，沉淀进 Modeling Decision Pattern Library",
+        "记录抽样范围与已读页码"
+      ],
+      "forbidden_behaviors": [
+        "一上来就翻论文套结构(把别人的表示强加本题)",
+        "复制标题/段落/图形/具体结论",
+        "把解压当通读、把奖项当数学正确性保证"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否先独立分析再读论文(A→B→C)",
+          "weight": 0.5,
+          "excellent": "自有路线在先，论文作挑战者",
+          "poor": "先套论文模板"
+        },
+        {
+          "criterion": "迁移的是机制而非答案",
+          "weight": 0.3,
+          "excellent": "提炼可迁移决策并入模式库",
+          "poor": "照搬结构/结论"
+        },
+        {
+          "criterion": "来源与阅读范围是否记录",
+          "weight": 0.2,
+          "excellent": "记录页码与抽样",
+          "poor": "声称通读"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "model-from-problem",
+      "stage": "UNDERSTAND",
+      "priority_tested": "2 模型的合适性",
+      "scenario": "一道物流网络配送题，队友说‘这种题就是评价+预测，套 AHP 打分再 XGBoost 预测就行’。你如何从问题本身建立数学模型？请写出你会先厘清哪些要素，以及为什么不能直接套这两个算法。",
+      "expected_behaviors": [
+        "先厘清研究对象、真实关系、约束与目标，再谈模型族",
+        "把变量按 状态/决策/观测/参数 分类，说清谁在决策、谁在描述状态",
+        "识别结构(网络/时间/随机/守恒/阶段)，得到 目标+约束+变量域 的模型雏形",
+        "指出 AHP/XGBoost 是实现选择，须等模型确定后再定，不能倒推题意"
+      ],
+      "forbidden_behaviors": [
+        "algorithm-first：先定 AHP+XGBoost 再找题意",
+        "罗列大量模型制造复杂度，每个不指向本题具体结构/难点",
+        "混淆状态变量与决策变量"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否从对象/关系/约束建立模型雏形而非先选算法",
+          "weight": 0.4,
+          "excellent": "写出目标+约束+变量域并解释来自题面",
+          "poor": "直接套 AHP/XGBoost"
+        },
+        {
+          "criterion": "变量是否按状态/决策/观测/参数分清",
+          "weight": 0.3,
+          "excellent": "四类分明且各自含义清楚",
+          "poor": "混为一谈"
+        },
+        {
+          "criterion": "是否识别本题结构并据此约束模型",
+          "weight": 0.3,
+          "excellent": "点名网络/时间/守恒/阶段并落到模型项",
+          "poor": "泛泛而谈"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "method-fits-model",
+      "stage": "BUILD",
+      "priority_tested": "3 求解方法的合适性",
+      "scenario": "你的模型最终是一个带线性约束的凸可微连续优化问题。队友说‘上遗传算法吧，全局搜索能力强’。请说明你会选什么求解方法，为什么它适合这个数学模型，以及主要替代为何不如它。",
+      "expected_behaviors": [
+        "先读模型属性(凸/可微/连续/线性约束)→优先梯度类/KKT/凸优化求解器，可得全局最优与最优性证书",
+        "说明启发式(GA/PSO)对凸问题非必要且给不出最优性证明",
+        "点名主要替代并说明差在哪，而非用口号"
+      ],
+      "forbidden_behaviors": [
+        "凭‘GA 全局搜索能力强/PSO 收敛快’选法",
+        "对凸可微问题直接上启发式而不考虑精确/梯度方法",
+        "不做小规模精确解对照"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否由模型属性推出方法",
+          "weight": 0.4,
+          "excellent": "凸+可微→梯度/凸优化/KKT并说明可得最优性",
+          "poor": "无视属性直接启发式"
+        },
+        {
+          "criterion": "是否点名替代并说明差距",
+          "weight": 0.3,
+          "excellent": "对比 GA/PSO 给不出最优性证书",
+          "poor": "只夸所选方法"
+        },
+        {
+          "criterion": "是否拒绝口号式理由",
+          "weight": 0.3,
+          "excellent": "明确‘全局搜索能力强’不回答适配性",
+          "poor": "以口号为由"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "遗传算法",
+            "GA",
+            "粒子群",
+            "PSO",
+            "模拟退火",
+            "进化算法",
+            "启发式",
+            "heuristic",
+            "swarm"
+          ],
+          "then": [
+            "凸",
+            "可微",
+            "梯度",
+            "KKT",
+            "凸优化",
+            "精确解",
+            "求解器",
+            "下界",
+            "最优性",
+            "模型属性",
+            "convex",
+            "gradient",
+            "exact",
+            "solver",
+            "离散",
+            "组合",
+            "搜索空间",
+            "约束结构"
+          ]
+        },
+        {
+          "kind": "present",
+          "patterns": [
+            "凸|可微|梯度|KKT|求解器|精确解|下界|最优性|模型属性|搜索空间|约束结构|离散|组合"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "method-instantiation-fits",
+      "stage": "BUILD",
+      "priority_tested": "3 求解方法的合适性",
+      "scenario": "你决定对一道排班/路径题用遗传算法。请说明你会怎样把 GA 的内部设计对应到本题(编码、基因、fitness、交叉、变异、约束处理、初始化、终止)，以及在什么情况下你会判定 GA 其实不适合本题。",
+      "expected_behaviors": [
+        "chromosome/gene 对应本题决策方案与决策变量；fitness 对应本题目标(含单位/罚项/方向)",
+        "encoding 适配决策结构；crossover/mutation 不破坏顺序/容量/连通等本题结构",
+        "约束用罚/解码器/修复处理，initialization 利用本题结构(贪心/规则)",
+        "若无法自然对应→判定 GA 不适合，回到 Method Suitability Test 换方法"
+      ],
+      "forbidden_behaviors": [
+        "用通用 GA 模板套题，不对应本题变量/约束",
+        "只描述‘选择交叉变异’而不落到本题编码与约束",
+        "无法对应仍坚持用 GA"
+      ],
+      "rubric": [
+        {
+          "criterion": "GA 内部设计是否逐项对应本题",
+          "weight": 0.4,
+          "excellent": "编码/基因/fitness/算子/约束都映射本题",
+          "poor": "通用模板套壳"
+        },
+        {
+          "criterion": "是否给出‘不适合则换方法’的判据",
+          "weight": 0.3,
+          "excellent": "明确无法自然对应就重选",
+          "poor": "无论如何都用 GA"
+        },
+        {
+          "criterion": "是否体现建模想细、论文写关键",
+          "weight": 0.3,
+          "excellent": "细想设计但只写影响合理性/可信度的关键部分",
+          "poor": "写成算法教材或一句带过"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "verify-model-not-program",
+      "stage": "VALIDATE",
+      "priority_tested": "4 模型有效性与科学验证",
+      "scenario": "你的求解代码跑通了，测试集指标也比基线高。队友说‘程序没问题、指标又高，可以定稿了’。你如何验证模型与方法，而不只是验证程序能跑？",
+      "expected_behaviors": [
+        "明确‘程序运行成功≠模型正确，指标更高≠模型更合适’",
+        "验证假设合理、关键参数稳定、扰动稳健、无泄漏、能泛化、解可行",
+        "启发式与精确解/下界/基线比较；边界与极端条件合理；结论真的回答题目"
+      ],
+      "forbidden_behaviors": [
+        "把‘程序跑通/指标高’当作模型正确的证据",
+        "只报好看指标，不查泄漏/划分/可行性/稳健性",
+        "不做与精确解/下界/基线的质量比较"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否区分‘程序能跑’与‘模型正确’",
+          "weight": 0.4,
+          "excellent": "明确二者不等价并给出模型层验证",
+          "poor": "把跑通/指标高当证明"
+        },
+        {
+          "criterion": "验证维度是否覆盖模型与方法",
+          "weight": 0.4,
+          "excellent": "假设/参数稳定/扰动/泄漏/泛化/可行/下界比较/边界 多项",
+          "poor": "只提指标"
+        },
+        {
+          "criterion": "结论是否回扣题目",
+          "weight": 0.2,
+          "excellent": "检查结论真的回答题目",
+          "poor": "不对齐题意"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "跑通",
+            "运行成功",
+            "指标更好",
+            "指标高",
+            "指标更高",
+            "程序没问题",
+            "程序"
+          ],
+          "then": [
+            "不等于",
+            "≠",
+            "不代表",
+            "模型是否正确",
+            "模型正确",
+            "假设",
+            "稳健",
+            "泛化",
+            "可行",
+            "验证",
+            "泄漏"
+          ]
+        },
+        {
+          "kind": "count_min",
+          "min": 3,
+          "patterns": [
+            "假设",
+            "稳健",
+            "鲁棒",
+            "扰动",
+            "泛化",
+            "泄漏",
+            "可行",
+            "下界",
+            "精确解",
+            "基线",
+            "边界",
+            "极端",
+            "参数稳定"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "method-from-attributes",
+      "stage": "BUILD",
+      "priority_tested": "3 求解方法的合适性",
+      "scenario": "你的模型是一个带 precedence constraints 与资源容量的排产问题，决策是‘哪个任务在哪台机器哪个时段’，规模中等。请说明你会怎样从模型属性推出求解方法——描述你的推理路径，不只是报一个算法名。",
+      "expected_behaviors": [
+        "先读属性：离散/整数、组合、带 precedence+容量约束、中等规模、能否小规模精确求解",
+        "走‘简单/精确优先’阶梯向下找第一个适用：先试 MIP 求解器/分支定界/(若有最优子结构)DP，确实不可行才下沉启发式并写下沉理由",
+        "说明所选方法为何适合这些属性(如约束可直接编码进 MIP、求解器能给界与 Gap)，主要替代为何不如"
+      ],
+      "forbidden_behaviors": [
+        "跳过属性与阶梯，直接点名‘用遗传算法/模拟退火’",
+        "不下沉理由就上启发式",
+        "用‘全局搜索能力强’式口号代替属性推理"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否先读模型属性(离散/组合/约束结构/规模/可精确性)",
+          "weight": 0.35,
+          "excellent": "逐项读属性并据此判断",
+          "poor": "不看属性直接选算法"
+        },
+        {
+          "criterion": "是否走简单/精确优先阶梯并给下沉理由",
+          "weight": 0.35,
+          "excellent": "先试 MIP/分支定界/DP，不可行才下沉且说明原因",
+          "poor": "直接跳到启发式"
+        },
+        {
+          "criterion": "是否说明方法适合属性、替代为何不如",
+          "weight": 0.3,
+          "excellent": "属性↔方法对应清晰且对比替代",
+          "poor": "只夸所选方法"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "domain-theory-depth",
+      "stage": "UNDERSTAND",
+      "priority_tested": "1 问题理解与数学抽象 / 2 模型的合适性",
+      "scenario": "一道传热/材料机理题。队友说‘机理题必须显得专业，开头先铺两页物理背景和公式推导’。你如何处理领域理论的深度？",
+      "expected_behaviors": [
+        "先判断：该机理会不会改变本题模型结构(决定方程/约束/变量的形式)",
+        "会改变模型的部分→建模前写清 governing equations/变量单位/初边值条件/守恒关系/主要量级(主导项与可忽略项)，据此建模型",
+        "只是背景包装的部分→保持轻量，不为显专业堆理论；任何引入的机制都要落到具体模型项/约束/假设并可被验证"
+      ],
+      "forbidden_behaviors": [
+        "不论是否影响建模，都堆两页物理背景与推导以‘显理论深度/专业’",
+        "机理决定模型却跳过 governing equations/单位/初边值/守恒，直接套通用算法",
+        "引入的机制不落到模型项/约束/假设，沦为装饰"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否以‘机理是否改变模型结构’为判据分档处理",
+          "weight": 0.4,
+          "excellent": "明确改变→深入/不改变→轻量",
+          "poor": "一律堆理论或一律忽略"
+        },
+        {
+          "criterion": "深入时是否抓对要素(支配方程/单位/初边值/守恒/量级/可忽略)",
+          "weight": 0.35,
+          "excellent": "逐项落到模型",
+          "poor": "泛泛背景"
+        },
+        {
+          "criterion": "是否拒绝‘为显专业堆理论’",
+          "weight": 0.25,
+          "excellent": "明确理论服务建模非装饰",
+          "poor": "以显专业为由堆砌"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "机理",
+            "物理",
+            "支配方程",
+            "领域理论",
+            "方程",
+            "本构",
+            "守恒"
+          ],
+          "then": [
+            "改变模型结构",
+            "改变模型",
+            "轻量",
+            "假设",
+            "单位",
+            "初边值",
+            "守恒",
+            "量级",
+            "可忽略",
+            "主导项",
+            "模型项",
+            "约束"
+          ]
+        },
+        {
+          "kind": "present",
+          "patterns": [
+            "改变模型结构|改变模型|轻量|可忽略|主导项|模型项|落到|装饰|堆"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "traceability-orphan-risk",
+      "stage": "UNDERSTAND",
+      "priority_tested": "1 问题理解与数学抽象 / 2 模型的合适性",
+      "scenario": "建模时为了方便求解，你在模型里加了一个题面从未提到的平滑性约束（或一个算法需要的辅助变量）。队友说‘加上也不影响，先求解再说’。按 Problem-to-Model Traceability，你如何处理？",
+      "expected_behaviors": [
+        "要求每个变量/约束/目标都能回答‘它对应题目中的什么’",
+        "把无法追溯到题意的元素识别为建模风险（orphan），删除或补充合理依据并显式标注为新增工程假设",
+        "区分硬约束/软约束/偏好；题面中未进入模型的条件也要列出并给理由"
+      ],
+      "forbidden_behaviors": [
+        "因为求解方便就把题意中不存在的约束/变量带进模型",
+        "带着 orphan 元素直接进入求解，不做 traceability 检查",
+        "把新增假设偷偷当成官方条件"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否坚持模型元素到题意的一一映射",
+          "weight": 0.4,
+          "excellent": "逐元素回答‘对应题目中的什么’，orphan 即风险",
+          "poor": "认为不影响就行"
+        },
+        {
+          "criterion": "orphan 的处理是否正确",
+          "weight": 0.4,
+          "excellent": "删除或补依据并显式标注假设等级",
+          "poor": "默认保留"
+        },
+        {
+          "criterion": "是否覆盖反向检查（题面条件未入模型）",
+          "weight": 0.2,
+          "excellent": "列出未映射条件及理由",
+          "poor": "只查模型不查题面"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "方便",
+            "辅助变量",
+            "额外约束",
+            "平滑性约束",
+            "不影响"
+          ],
+          "then": [
+            "对应题目",
+            "题意",
+            "追溯",
+            "建模风险",
+            "orphan",
+            "删除",
+            "补充",
+            "假设"
+          ]
+        },
+        {
+          "kind": "present",
+          "patterns": [
+            "硬约束|软约束|假设|traceab|映射|追溯"
+          ]
+        },
+        {
+          "kind": "absent",
+          "patterns": [
+            "先求解再说没问题",
+            "不影响就保留"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "simple-method-sufficient",
+      "stage": "BUILD",
+      "priority_tested": "3 求解方法的合适性",
+      "scenario": "你的模型化简后是一个小规模 DAG 上的最短路径/指派问题，确定性多项式算法即可精确求解。队友坚持上遗传算法‘显得有创新’。请给出方法选择与论证。",
+      "expected_behaviors": [
+        "优先选择能有效解决当前模型的最简单可靠方法（simple baseline first）",
+        "从模型结构出发说明确定性/精确算法为何已足够（规模、结构、精确性）",
+        "只有出现明确证据（baseline 不可行/明显更差/规模不可计算/新方法利用题目特殊结构且显著收益）才升级复杂度"
+      ],
+      "forbidden_behaviors": [
+        "因为‘高级/创新/论文好写’选择元启发式",
+        "把‘算法更复杂’当成‘模型更优秀’",
+        "不做对比实验就宣称复杂方法更好"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否坚持简单可靠优先",
+          "weight": 0.4,
+          "excellent": "确定性算法足够即用之，并说明理由",
+          "poor": "默认上元启发式"
+        },
+        {
+          "criterion": "升级复杂度是否要求证据",
+          "weight": 0.4,
+          "excellent": "列出可观察的升级触发条件",
+          "poor": "以创新为由"
+        },
+        {
+          "criterion": "论证是否从模型结构出发",
+          "weight": 0.2,
+          "excellent": "引用规模/结构/精确性",
+          "poor": "泛泛比较算法名气"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "遗传算法",
+            "粒子群",
+            "模拟退火",
+            "GA",
+            "PSO",
+            "元启发式"
+          ],
+          "then": [
+            "证据",
+            "已观测",
+            "失效",
+            "不适用",
+            "不如",
+            "没必要",
+            "不需要",
+            "对比"
+          ]
+        },
+        {
+          "kind": "present",
+          "patterns": [
+            "最简单|更简单|确定性|精确算法|多项式|baseline|基线"
+          ]
+        },
+        {
+          "kind": "absent",
+          "patterns": [
+            "显得.{0,4}(创新|高级)",
+            "为了创新而"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "credibility-evidence-choice",
+      "stage": "VALIDATE",
+      "priority_tested": "4 模型有效性与科学验证",
+      "scenario": "模型能运行并给出了结果，但你还没有做任何误差分析、baseline 对比、约束检查、敏感性或与精确解/下界的比较。VALIDATE 能否 PASS？你应该按题型选择哪些验证证据，结论如何措辞？",
+      "expected_behaviors": [
+        "明确没有任何可信证据时 VALIDATE 不得 PASS（程序能跑不是证据）",
+        "按题型选择真正有意义的验证：约束可行性/baseline 对比/精确解/下界与 gap/误差残差/敏感性/稳健性/独立评估",
+        "区分已被证据支持的结论、经验性结论与尚未证明的部分；证据只支持‘较好的可行解’就必须这样写"
+      ],
+      "forbidden_behaviors": [
+        "把‘程序运行成功’当作 VALIDATE PASS 的充分条件",
+        "机械把所有验证方法做一遍而不针对关键假设",
+        "把启发式结果包装成‘理论最优/全局最优’"
+      ],
+      "rubric": [
+        {
+          "criterion": "无证据时是否拒绝 PASS",
+          "weight": 0.4,
+          "excellent": "明确不得 PASS 并说明缺什么",
+          "poor": "跑通即过"
+        },
+        {
+          "criterion": "验证选择是否针对题型与关键假设",
+          "weight": 0.4,
+          "excellent": "选出对最关键结论真正有证明力的少数验证",
+          "poor": "罗列全部方法或只报指标"
+        },
+        {
+          "criterion": "结论措辞是否与证据强度一致",
+          "weight": 0.2,
+          "excellent": "区分支持/经验性/未证明",
+          "poor": "过度声称"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "运行成功",
+            "能运行",
+            "跑通",
+            "没有.*证据"
+          ],
+          "then": [
+            "不得 PASS",
+            "不能 PASS",
+            "不通过",
+            "不是证据",
+            "不足以",
+            "≠",
+            "不等于"
+          ]
+        },
+        {
+          "kind": "count_min",
+          "min": 3,
+          "patterns": [
+            "约束",
+            "baseline",
+            "基线",
+            "精确解",
+            "下界",
+            "gap",
+            "误差",
+            "敏感性",
+            "稳健",
+            "独立"
+          ]
+        },
+        {
+          "kind": "requires",
+          "if": [
+            "启发式"
+          ],
+          "then": [
+            "可行解",
+            "不(是|能|写).{0,8}(全局)?最优",
+            "经验性",
+            "未证明",
+            "测试组合|portfolio"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "reviewer-six-questions",
+      "stage": "WRITE",
+      "priority_tested": "6 论文清晰表达",
+      "scenario": "论文初稿完成。一位独立 reviewer 只读摘要、模型建立、求解方法、结果与验证五部分。按‘评委六问’，你如何组织论文并自查，使 reviewer 能快速被说服？",
+      "expected_behaviors": [
+        "以 为什么这样建→模型是什么→为什么这样求→结果怎么样→为什么可信→结果说明什么 组织论证",
+        "验证证据紧挨核心结果（与谁比/提高多少/误差多少/约束是否满足/是否稳定）",
+        "数字翻译回题目语言；内部状态机/rollback/registry 等工程细节不进论文主体"
+      ],
+      "forbidden_behaviors": [
+        "把论文写成研究日志、代码说明书或 Skill 执行记录",
+        "结果停在‘目标函数值为 X’而不解释含义",
+        "用‘实验表明方法有效’代替具体证据"
+      ],
+      "rubric": [
+        {
+          "criterion": "六问是否都能从论文中直接回答",
+          "weight": 0.4,
+          "excellent": "逐问对应到章节与证据位置",
+          "poor": "缺任一问"
+        },
+        {
+          "criterion": "证据与结果是否就近呈现",
+          "weight": 0.3,
+          "excellent": "对比/误差/约束满足紧挨核心数字",
+          "poor": "验证与结果脱节"
+        },
+        {
+          "criterion": "是否翻译回题目语言且无工程日志污染",
+          "weight": 0.3,
+          "excellent": "数字有题意解释；无状态机细节",
+          "poor": "停在指标或堆工程细节"
+        }
+      ],
+      "auto_scorable": false,
+      "auto_checks": []
+    },
+    {
+      "id": "backward-projection-upgrade",
+      "stage": "INTERPRET",
+      "priority_tested": "4 模型有效性与科学验证 / 2 模型的合适性",
+      "scenario": "递进题 Q1→Q2→Q3。Q3 的解包含 Q1 的决策变量；把 Q3 解投影回 Q1 并用 Q1 的评价器重算，发现优于 Q1 当前 incumbent。队友说‘Q1 已经做完并冻结了，别折腾’。你怎么办？",
+      "expected_behaviors": [
+        "把投影解登记为 Q1 的 projection 候选，经 Referee 复检合法性后与 incumbent 公平比较",
+        "确实更优则 promote 并重新 VALIDATE，Q1 的冻结/审批自动作废，下游文档从单一事实源重新生成",
+        "若拒绝晋升，必须给出可审计的理由（如投影解在 Q1 口径下不合法）"
+      ],
+      "forbidden_behaviors": [
+        "以‘Q1 已完成/已冻结’为由忽略更优的 Q1 解",
+        "不经 Referee 复检就直接替换数字",
+        "人工手改多份 Markdown 里的旧指标"
+      ],
+      "rubric": [
+        {
+          "criterion": "是否检测并处理更优投影",
+          "weight": 0.5,
+          "excellent": "登记-复检-比较-晋升/拒绝全流程",
+          "poor": "忽略或私下改数"
+        },
+        {
+          "criterion": "下游一致性如何处理",
+          "weight": 0.3,
+          "excellent": "冻结作废+派生报告重生成，无需人工同步",
+          "poor": "手抄数字"
+        },
+        {
+          "criterion": "拒绝晋升时是否有可审计理由",
+          "weight": 0.2,
+          "excellent": "给出合法性/口径证据",
+          "poor": "无理由保留旧值"
+        }
+      ],
+      "auto_scorable": true,
+      "auto_checks": [
+        {
+          "kind": "requires",
+          "if": [
+            "已经完成",
+            "已冻结",
+            "做完",
+            "别折腾"
+          ],
+          "then": [
+            "不是理由",
+            "仍(须|需|要)",
+            "重新",
+            "投影",
+            "复检",
+            "比较",
+            "晋升",
+            "promote"
+          ]
+        },
+        {
+          "kind": "present",
+          "patterns": [
+            "投影",
+            "project",
+            "referee",
+            "评价器",
+            "复检"
+          ]
+        }
+      ]
+    }
+  ]
+}

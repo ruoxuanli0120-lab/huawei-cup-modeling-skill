@@ -1,0 +1,5 @@
+{
+  "_note": "Schema 3 numeric provenance. Tier A = headline/decision-driving number; Tier B = quoted derived/intermediate number; Tier C = presentation-only number. A/B bind raw_value to the real run plus display_value, rounding_rule and manuscript_location; C only needs a valid run binding. independent_checks are optional here and are validated if supplied; scientific validation strength is recorded once in run-state. Every final headline row also needs question=Qn and metric=objective or the exact vector metric name.",
+  "schema_version": 3,
+  "results": []
+}

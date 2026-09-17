@@ -1,0 +1,13 @@
+{
+  "edition": "CURRENT",
+  "verification_status": "unverifiable",
+  "search_attempted": false,
+  "search_note": "",
+  "paper": "qa/final-render/main.pdf",
+  "paper_sha256": "",
+  "extraction_reviewed": false,
+  "official_sources": [],
+  "items": [],
+  "no_explicit_format_requirements": false,
+  "no_requirement_note": ""
+}

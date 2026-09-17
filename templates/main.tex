@@ -1,0 +1,46 @@
+% !TEX program = xelatex
+% Generic Huawei Cup modeling manuscript starter.
+% Formatting: automatically check the CURRENT official notice/template at WRITE time.
+% Enforce only explicit mandatory requirements; treat recommendations as warnings.
+% Do not infer unspecified rules from old years or from visual appearance alone.
+% If the user/official source supplies a LaTeX template/class, preserve its explicit required structure.
+\documentclass[UTF8]{ctexart}
+\usepackage{amsmath,amssymb,amsthm,booktabs,graphicx,float}
+\usepackage[hidelinks]{hyperref}
+
+% Neutral working default only; user instructions override it.
+\pagestyle{plain}
+
+\begin{document}
+
+\begin{center}
+  {\Large 论文题目}
+\end{center}
+
+\noindent\textbf{摘要：}用简洁文字说明问题、模型、方法、主要结果、验证与结论边界。摘要的具体位置、篇幅、字号等仅按当届官方明确 mandatory 或用户明确要求设置。
+
+\noindent\textbf{关键词：}关键词一；关键词二；关键词三
+
+\section{问题重述}
+只保留理解任务所需的题意、对象和目标。
+
+\section{问题分析与建模思路}
+说明题目结构为什么导向当前表示和模型；若确有实质替代且比较有助于论证，再简述选择依据，不为形式制造替代路线。
+
+\section{模型假设与符号说明}
+给出有依据的假设和统一符号。
+
+\section{模型建立与求解}
+集中给出变量、目标、约束、关键公式与求解方法，并解释方法为何适合模型。
+
+\section{结果与验证}
+给出回答题目的关键结果，并紧邻展示误差、基线、约束检查、敏感性或其它题型匹配的验证证据。
+
+\section{结论、局限与推广}
+把结果翻译回题目语言，写清支持什么、不支持什么以及适用范围。
+
+\begin{thebibliography}{9}
+\bibitem{source} 实际使用并核验过的可靠来源。
+\end{thebibliography}
+
+\end{document}
