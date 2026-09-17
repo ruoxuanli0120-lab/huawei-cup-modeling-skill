@@ -32,7 +32,7 @@ huawei-cup-modeling-skill/
 ├── README.md
 ├── LICENSE
 ├── SKILL.md
-├── scripts/
-├── references/
-├── examples/
-└── docs/
+├── scripts/        # Workflow, validation and packaging tools
+├── references/     # Modeling and research guidance
+├── templates/      # Evidence, review and traceability templates
+└── rules/          # Modeling and writing rules
